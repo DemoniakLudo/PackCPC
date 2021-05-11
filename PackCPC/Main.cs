@@ -10,7 +10,7 @@ namespace PackCPC {
 
 		public Main() {
 			InitializeComponent();
-			comboPackMethode.SelectedItem = "Standard";
+			comboPackMethode.SelectedItem = "ZX0";
 		}
 
 		private void WriteInfo(string txt) {

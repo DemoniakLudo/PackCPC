@@ -48,7 +48,7 @@
             "Standard",
             "ZX0",
             "ZX1"});
-			this.comboPackMethode.Location = new System.Drawing.Point(141, 6);
+			this.comboPackMethode.Location = new System.Drawing.Point(126, 6);
 			this.comboPackMethode.Name = "comboPackMethode";
 			this.comboPackMethode.Size = new System.Drawing.Size(90, 21);
 			this.comboPackMethode.TabIndex = 67;
@@ -56,7 +56,7 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(3, 9);
+			this.label1.Location = new System.Drawing.Point(9, 9);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(111, 13);
 			this.label1.TabIndex = 68;
