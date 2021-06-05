@@ -6,11 +6,11 @@ namespace PackCPC {
 	public partial class Main : Form {
 		public enum PackMethode { None = 0, Standard, ZX0, ZX1 };
 
-		static private byte[] result = new byte[0x10000];
+		static private byte[] result = new byte[0x40000];
 
 		public Main() {
 			InitializeComponent();
-			comboPackMethode.SelectedItem = "Standard";
+			comboPackMethode.SelectedIndex = 0;
 		}
 
 		private void WriteInfo(string txt) {
@@ -29,7 +29,7 @@ namespace PackCPC {
 				fileScr.Close();
 				bool isCpc = CpcSystem.CheckAmsdos(tabBytes);
 				if (isCpc) {
-					if (chkNoAmsdos.Checked)
+					if (chkNoAmsdos.Checked || chkAsm.Checked)
 						WriteInfo("Amsdos header detected, but no Amsdos header will be written to destination file");
 					else
 						WriteInfo("Amsdos header detected, will write Amsdos header to destination file");
@@ -52,22 +52,43 @@ namespace PackCPC {
 						pkMethode = PackMethode.ZX1;
 						break;
 				}
-				PackModule p = new PackModule();
-				int lDest = p.Pack(tabBytes, lSource, result, 0, pkMethode);
+				int lDest = lSource;
+				if (pkMethode != PackMethode.None) {
+					PackModule p = new PackModule();
+					lDest = p.Pack(tabBytes, lSource, result, 0, pkMethode);
+				}
+				else {
+					Array.Copy(tabBytes, result, lSource);
+				}
 				WriteInfo("output file size:" + lDest + " (#" + lDest.ToString("X4") + ") (gain=" + (100 - (100 * lDest / lSource)).ToString("00") + "%)");
 				SaveFileDialog dlgSave = new SaveFileDialog();
-				dlgSave.Filter = "All files (*.*)|*.*";
+				dlgSave.Filter = chkAsm.Checked ? "Assembler files (*.asm)|*.asm" : "All files (*.*)|*.*";
 				if (dlgSave.ShowDialog() == DialogResult.OK) {
-					FileStream fs = new FileStream(dlgSave.FileName, FileMode.Create, FileAccess.ReadWrite);
-					BinaryWriter bw = new BinaryWriter(fs);
-					if (isCpc && !chkNoAmsdos.Checked) {
-						string name = Path.GetFileName(dlgSave.FileName);
-						bw.Write(CpcSystem.AmsdosToByte(CpcSystem.CreeEntete(name, 0x4000, (short)lDest, 0)));
+					if (chkAsm.Checked) {
+						StreamWriter sw = File.CreateText(dlgSave.FileName);
+						if (pkMethode != PackMethode.None) {
+							SaveAsm.GenereDepack(sw, pkMethode);
+							sw.WriteLine("\n\r;Datas");
+						}
+						SaveAsm.GenereDatas(sw, result, lDest, 16);
+						sw.Close();
 					}
-					bw.Write(result, 0, lDest);
-					bw.Close();
+					else {
+						FileStream fs = new FileStream(dlgSave.FileName, FileMode.Create, FileAccess.ReadWrite);
+						BinaryWriter bw = new BinaryWriter(fs);
+						if (isCpc && !chkNoAmsdos.Checked) {
+							string name = Path.GetFileName(dlgSave.FileName);
+							bw.Write(CpcSystem.AmsdosToByte(CpcSystem.CreeEntete(name, 0x4000, (short)lDest, 0)));
+						}
+						bw.Write(result, 0, lDest);
+						bw.Close();
+					}
 				}
 			}
+		}
+
+		private void chkAsm_CheckedChanged(object sender, EventArgs e) {
+			chkNoAmsdos.Enabled = !chkAsm.Checked;
 		}
 	}
 }

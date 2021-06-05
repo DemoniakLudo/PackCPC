@@ -28,6 +28,7 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.listBox1 = new System.Windows.Forms.ListBox();
 			this.chkNoAmsdos = new System.Windows.Forms.CheckBox();
+			this.chkAsm = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// bpPack
@@ -36,7 +37,7 @@
 			this.bpPack.Name = "bpPack";
 			this.bpPack.Size = new System.Drawing.Size(157, 23);
 			this.bpPack.TabIndex = 0;
-			this.bpPack.Text = "Open file to pack";
+			this.bpPack.Text = "Open file to pack/save";
 			this.bpPack.UseVisualStyleBackColor = true;
 			this.bpPack.Click += new System.EventHandler(this.bpPack_Click);
 			// 
@@ -45,6 +46,7 @@
 			this.comboPackMethode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboPackMethode.FormattingEnabled = true;
 			this.comboPackMethode.Items.AddRange(new object[] {
+            "-- None --",
             "Standard",
             "ZX0",
             "ZX1"});
@@ -73,18 +75,30 @@
 			// chkNoAmsdos
 			// 
 			this.chkNoAmsdos.AutoSize = true;
-			this.chkNoAmsdos.Location = new System.Drawing.Point(224, 39);
+			this.chkNoAmsdos.Location = new System.Drawing.Point(224, 33);
 			this.chkNoAmsdos.Name = "chkNoAmsdos";
 			this.chkNoAmsdos.Size = new System.Drawing.Size(164, 17);
 			this.chkNoAmsdos.TabIndex = 70;
 			this.chkNoAmsdos.Text = "Save without Amsdos header";
 			this.chkNoAmsdos.UseVisualStyleBackColor = true;
 			// 
+			// chkAsm
+			// 
+			this.chkAsm.AutoSize = true;
+			this.chkAsm.Location = new System.Drawing.Point(224, 52);
+			this.chkAsm.Name = "chkAsm";
+			this.chkAsm.Size = new System.Drawing.Size(140, 17);
+			this.chkAsm.TabIndex = 71;
+			this.chkAsm.Text = "Save as asm file (DEFB)";
+			this.chkAsm.UseVisualStyleBackColor = true;
+			this.chkAsm.CheckedChanged += new System.EventHandler(this.chkAsm_CheckedChanged);
+			// 
 			// Main
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(400, 213);
+			this.Controls.Add(this.chkAsm);
 			this.Controls.Add(this.chkNoAmsdos);
 			this.Controls.Add(this.listBox1);
 			this.Controls.Add(this.label1);
@@ -107,6 +121,7 @@
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.ListBox listBox1;
 		private System.Windows.Forms.CheckBox chkNoAmsdos;
+		private System.Windows.Forms.CheckBox chkAsm;
 	}
 }
 
