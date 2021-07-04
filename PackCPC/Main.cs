@@ -6,8 +6,6 @@ namespace PackCPC {
 	public partial class Main : Form {
 		public enum PackMethode { None = 0, Standard, ZX0, ZX1 };
 
-		static private byte[] result = new byte[0x40000];
-
 		public Main() {
 			InitializeComponent();
 			comboPackMethode.SelectedIndex = 0;
@@ -25,6 +23,7 @@ namespace PackCPC {
 				FileStream fileScr = new FileStream(dlgOpen.FileName, FileMode.Open, FileAccess.Read);
 				int lSource = (int)fileScr.Length;
 				byte[] tabBytes = new byte[lSource];
+				byte[] result = new byte[lSource + 128];
 				fileScr.Read(tabBytes, 0, lSource);
 				fileScr.Close();
 				bool isCpc = CpcSystem.CheckAmsdos(tabBytes);
