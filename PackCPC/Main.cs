@@ -36,7 +36,7 @@ namespace PackCPC {
 					Array.Copy(tabBytes, 128, tabBytes, 0, lSource - 128);
 					lSource -= 128;
 				}
-				WriteInfo("Source file size:" + lSource + " (#" + lSource.ToString("X4") + ")");
+				WriteInfo("Source file (" + Path.GetFileName(dlgOpen.FileName) + ") size:" + lSource + " (#" + lSource.ToString("X4") + ")");
 				PackMethode pkMethode = PackMethode.None;
 				switch (comboPackMethode.SelectedItem.ToString()) {
 					case "Standard":
@@ -65,7 +65,7 @@ namespace PackCPC {
 				if (dlgSave.ShowDialog() == DialogResult.OK) {
 					if (chkAsm.Checked) {
 						StreamWriter sw = File.CreateText(dlgSave.FileName);
-						if (pkMethode != PackMethode.None) {
+						if (pkMethode != PackMethode.None && !chkNoDepack.Checked) {
 							SaveAsm.GenereDepack(sw, pkMethode);
 							sw.WriteLine("\n\r;Datas");
 						}
@@ -88,6 +88,7 @@ namespace PackCPC {
 
 		private void chkAsm_CheckedChanged(object sender, EventArgs e) {
 			chkNoAmsdos.Enabled = !chkAsm.Checked;
+			chkNoDepack.Visible = chkAsm.Checked;
 		}
 	}
 }

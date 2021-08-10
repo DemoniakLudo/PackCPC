@@ -29,6 +29,7 @@
 			this.listBox1 = new System.Windows.Forms.ListBox();
 			this.chkNoAmsdos = new System.Windows.Forms.CheckBox();
 			this.chkAsm = new System.Windows.Forms.CheckBox();
+			this.chkNoDepack = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// bpPack
@@ -93,11 +94,23 @@
 			this.chkAsm.UseVisualStyleBackColor = true;
 			this.chkAsm.CheckedChanged += new System.EventHandler(this.chkAsm_CheckedChanged);
 			// 
+			// chkNoDepack
+			// 
+			this.chkNoDepack.AutoSize = true;
+			this.chkNoDepack.Location = new System.Drawing.Point(224, 12);
+			this.chkNoDepack.Name = "chkNoDepack";
+			this.chkNoDepack.Size = new System.Drawing.Size(168, 17);
+			this.chkNoDepack.TabIndex = 72;
+			this.chkNoDepack.Text = "Save without depack function";
+			this.chkNoDepack.UseVisualStyleBackColor = true;
+			this.chkNoDepack.Visible = false;
+			// 
 			// Main
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(400, 213);
+			this.Controls.Add(this.chkNoDepack);
 			this.Controls.Add(this.chkAsm);
 			this.Controls.Add(this.chkNoAmsdos);
 			this.Controls.Add(this.listBox1);
@@ -122,6 +135,7 @@
 		private System.Windows.Forms.ListBox listBox1;
 		private System.Windows.Forms.CheckBox chkNoAmsdos;
 		private System.Windows.Forms.CheckBox chkAsm;
+		private System.Windows.Forms.CheckBox chkNoDepack;
 	}
 }
 
