@@ -38,7 +38,7 @@
 			this.bpPack.Name = "bpPack";
 			this.bpPack.Size = new System.Drawing.Size(157, 23);
 			this.bpPack.TabIndex = 0;
-			this.bpPack.Text = "Open file to pack/save";
+			this.bpPack.Text = "Open file(s) to pack/save";
 			this.bpPack.UseVisualStyleBackColor = true;
 			this.bpPack.Click += new System.EventHandler(this.bpPack_Click);
 			// 

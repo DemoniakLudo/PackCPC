@@ -63,7 +63,7 @@ namespace PackCPC {
 
 		static public bool CheckAmsdos(byte[] entete) {
 			CpcAmsdos enteteAms = GetAmsdos(entete);
-			return CalcCheckSum(entete) == enteteAms.CheckSum;
+			return enteteAms.CheckSum!=0 && CalcCheckSum(entete) == enteteAms.CheckSum;
 		}
 
 		static public byte[] AmsdosToByte(CpcAmsdos obj) {
