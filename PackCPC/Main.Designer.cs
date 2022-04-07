@@ -30,6 +30,7 @@
 			this.chkNoAmsdos = new System.Windows.Forms.CheckBox();
 			this.chkAsm = new System.Windows.Forms.CheckBox();
 			this.chkNoDepack = new System.Windows.Forms.CheckBox();
+			this.chkMulti = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// bpPack
@@ -68,7 +69,7 @@
 			// listBox1
 			// 
 			this.listBox1.FormattingEnabled = true;
-			this.listBox1.Location = new System.Drawing.Point(6, 75);
+			this.listBox1.Location = new System.Drawing.Point(4, 85);
 			this.listBox1.Name = "listBox1";
 			this.listBox1.Size = new System.Drawing.Size(388, 134);
 			this.listBox1.TabIndex = 69;
@@ -105,12 +106,24 @@
 			this.chkNoDepack.UseVisualStyleBackColor = true;
 			this.chkNoDepack.Visible = false;
 			// 
+			// chkMulti
+			// 
+			this.chkMulti.AutoSize = true;
+			this.chkMulti.Location = new System.Drawing.Point(12, 62);
+			this.chkMulti.Name = "chkMulti";
+			this.chkMulti.Size = new System.Drawing.Size(197, 17);
+			this.chkMulti.TabIndex = 71;
+			this.chkMulti.Text = "Save multiple files in one packed file";
+			this.chkMulti.UseVisualStyleBackColor = true;
+			this.chkMulti.CheckedChanged += new System.EventHandler(this.chkAsm_CheckedChanged);
+			// 
 			// Main
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(400, 213);
+			this.ClientSize = new System.Drawing.Size(397, 223);
 			this.Controls.Add(this.chkNoDepack);
+			this.Controls.Add(this.chkMulti);
 			this.Controls.Add(this.chkAsm);
 			this.Controls.Add(this.chkNoAmsdos);
 			this.Controls.Add(this.listBox1);
@@ -136,6 +149,7 @@
 		private System.Windows.Forms.CheckBox chkNoAmsdos;
 		private System.Windows.Forms.CheckBox chkAsm;
 		private System.Windows.Forms.CheckBox chkNoDepack;
+		private System.Windows.Forms.CheckBox chkMulti;
 	}
 }
 
