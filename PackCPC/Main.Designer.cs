@@ -41,7 +41,7 @@
 			this.bpPack.TabIndex = 0;
 			this.bpPack.Text = "Open file(s) to pack/save";
 			this.bpPack.UseVisualStyleBackColor = true;
-			this.bpPack.Click += new System.EventHandler(this.bpPack_Click);
+			this.bpPack.Click += new System.EventHandler(this.BpPack_Click);
 			// 
 			// comboPackMethode
 			// 
@@ -93,7 +93,7 @@
 			this.chkAsm.TabIndex = 71;
 			this.chkAsm.Text = "Save as asm file (DEFB)";
 			this.chkAsm.UseVisualStyleBackColor = true;
-			this.chkAsm.CheckedChanged += new System.EventHandler(this.chkAsm_CheckedChanged);
+			this.chkAsm.CheckedChanged += new System.EventHandler(this.ChkAsm_CheckedChanged);
 			// 
 			// chkNoDepack
 			// 
@@ -115,7 +115,7 @@
 			this.chkMulti.TabIndex = 71;
 			this.chkMulti.Text = "Save multiple files in one packed file";
 			this.chkMulti.UseVisualStyleBackColor = true;
-			this.chkMulti.CheckedChanged += new System.EventHandler(this.chkAsm_CheckedChanged);
+			this.chkMulti.CheckedChanged += new System.EventHandler(this.ChkAsm_CheckedChanged);
 			// 
 			// Main
 			// 
