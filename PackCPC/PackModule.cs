@@ -8,16 +8,13 @@ namespace PackCPC {
 		private const int MAX_OFFSET_ZX0 = 32640;
 		private const int MAX_OFFSET_ZX1 = 32512;
 		private const int MAX_SCALE = 50;
-		private const int QTY_BLOCKS = 10000;
 
-		private int[] matches = new int[MAXSTRING];
-		private int[,] matchtable = new int[MAXSTRING, SEEKBACK];
+		private readonly int[] matches = new int[MAXSTRING];
+		private readonly int[,] matchtable = new int[MAXSTRING, SEEKBACK];
 
-		private Block ghost_root;
-		private Block[] dead_array;
-		private int dead_array_size = 0;
-		private int output_index, bit_index, bit_mask;
-		private bool backtrack;
+		private Block ghostRoot;
+		private int outputIndex, bitIndex, bitMask;
+		private bool backTrack;
 
 		public PackModule() {
 			InitializeComponent();
@@ -51,38 +48,38 @@ namespace PackCPC {
 					}
 					else
 						if ((a & 0x40) != 0) {
-							longueur = 2;
-							delta = bufIn[inBytes++] & 0x3f;
-							delta++;
-						}
-						else
+						longueur = 2;
+						delta = bufIn[inBytes++] & 0x3f;
+						delta++;
+					}
+					else
 							if ((a & 0x20) != 0) {
-								longueur = 2 + (bufIn[inBytes++] & 31);
-								delta = bufIn[inBytes++];
-								delta++;
-							}
-							else
+						longueur = 2 + (bufIn[inBytes++] & 31);
+						delta = bufIn[inBytes++];
+						delta++;
+					}
+					else
 								if ((a & 0x10) != 0) {
-									delta = (bufIn[inBytes++] & 15) << 8;
-									delta |= bufIn[inBytes++];
-									longueur = bufIn[inBytes++] + 1;
-									delta++;
-								}
-								else {
-									if (bufIn[inBytes] == 15) {
-										longueur = delta = bufIn[inBytes + 1] + 1;
-										inBytes += 2;
-									}
-									else {
-										if (bufIn[inBytes] > 1)
-											longueur = delta = bufIn[inBytes];
-										else
-											longueur = delta = 256;
+						delta = (bufIn[inBytes++] & 15) << 8;
+						delta |= bufIn[inBytes++];
+						longueur = bufIn[inBytes++] + 1;
+						delta++;
+					}
+					else {
+						if (bufIn[inBytes] == 15) {
+							longueur = delta = bufIn[inBytes + 1] + 1;
+							inBytes += 2;
+						}
+						else {
+							if (bufIn[inBytes] > 1)
+								longueur = delta = bufIn[inBytes];
+							else
+								longueur = delta = 256;
 
-										inBytes++;
-									}
-								}
-					for (; longueur-- > 0; ) {
+							inBytes++;
+						}
+					}
+					for (; longueur-- > 0;) {
 						bufOut[outBytes] = bufOut[outBytes - delta];
 						outBytes++;
 					}
@@ -246,32 +243,22 @@ namespace PackCPC {
 			return (lengthOut + codecount);
 		}
 
-        private Block Allocate(int bits, int index, int offset, int length, Block chain) {
+		private Block Allocate(int bits, int index, int offset, Block chain) {
 			Block ptr;
-			if (ghost_root != null) {
-				ptr = ghost_root;
-				ghost_root = ptr.ghost_chain;
-				if (ptr.chain != null) {
-					if (--ptr.chain.references == 0) {
-						ptr.chain.ghost_chain = ghost_root;
-						ghost_root = ptr.chain;
-					}
-				}
-			}
-			else {
-				if (dead_array_size == 0) {
-					dead_array = new Block[QTY_BLOCKS];
-					for (int i = 0; i < QTY_BLOCKS; i++)
-						dead_array[i] = new Block();
 
-					dead_array_size = QTY_BLOCKS;
+			if (ghostRoot == null)
+				ptr = new Block();
+			else {
+				ptr = ghostRoot;
+				ghostRoot = ptr.ghostChain;
+				if (ptr.chain != null && --ptr.chain.references == 0) {
+					ptr.chain.ghostChain = ghostRoot;
+					ghostRoot = ptr.chain;
 				}
-				ptr = dead_array[--dead_array_size];
 			}
 			ptr.bits = bits;
 			ptr.index = index;
 			ptr.offset = offset;
-			ptr.length = length;
 			if (chain != null)
 				chain.references++;
 
@@ -282,293 +269,332 @@ namespace PackCPC {
 
 		private void Assign(ref Block ptr, Block chain) {
 			chain.references++;
-			if (ptr != null) {
-				if (--ptr.references == 0) {
-					ptr.ghost_chain = ghost_root;
-					ghost_root = ptr;
-				}
+			if (ptr != null && --ptr.references == 0) {
+				ptr.ghostChain = ghostRoot;
+				ghostRoot = ptr;
 			}
 			ptr = chain;
 		}
 
-        private int Elias_gamma_bits(int value) {
+		private int EliasGammaBits(int value) {
 			int bits = 1;
-			while (value > 1) {
+			while ((value >>= 1) != 0)
 				bits += 2;
-				value >>= 1;
-			}
 			return bits;
 		}
 
-        private void Write_bit(int value, byte[] output_data) {
-			if (backtrack) {
+		private void WriteBit(int value, byte[] outputData) {
+			if (backTrack) {
 				if (value != 0)
-					output_data[output_index - 1] |= 1;
+					outputData[outputIndex - 1] |= 1;
 
-				backtrack = false;
+				backTrack = false;
 			}
 			else {
-				if (bit_mask == 0) {
-					bit_mask = 128;
-					bit_index = output_index;
-					output_data[output_index++] = 0;
+				if (bitMask == 0) {
+					bitMask = 128;
+					bitIndex = outputIndex;
+					outputData[outputIndex++] = 0;
 				}
 				if (value != 0)
-					output_data[bit_index] |= (byte)bit_mask;
+					outputData[bitIndex] |= (byte)bitMask;
 
-				bit_mask >>= 1;
+				bitMask >>= 1;
 			}
 		}
 
-        private void Write_interlaced_elias_gammaZX0(int value, byte[] output_data) {
+		private void WriteInterlacedEliasGammaZX0(int value, byte[] outputData, bool invertMode) {
 			int i;
+
 			for (i = 2; i <= value; i <<= 1)
 				;
 			i >>= 1;
-			while ((i >>= 1) > 0) {
-				Write_bit(0, output_data);
-				Write_bit(value & i, output_data);
+			while ((i >>= 1) != 0) {
+				WriteBit(0, outputData);
+				WriteBit(invertMode ? (value & i) == 0 ? 1 : 0 : value & i, outputData);
 			}
-			Write_bit(1, output_data);
+			WriteBit(1, outputData);
 		}
 
-        private void Write_interlaced_elias_gammaZX1(int value, byte[] output_data) {
-			int i;
-			for (i = 2; i <= value; i <<= 1)
-				;
-			i >>= 1;
-			while ((i >>= 1) > 0) {
-				Write_bit(1, output_data);
-				Write_bit(value & i, output_data);
-			}
-			Write_bit(0, output_data);
-		}
-
-		private int PackZX0(byte[] input_data, int input_size, byte[] output_data, int output_size) {
+		public int PackZX0(byte[] inputData, int inputSize, byte[] outputData, bool v2) {
 			Show();
 			int bits, length;
-			int max_offset = input_size - 1 > MAX_OFFSET_ZX0 ? MAX_OFFSET_ZX0 : input_size - 1 < 1 ? 1 : input_size - 1;
+			int maxOffset = inputSize - 1 > MAX_OFFSET_ZX0 ? MAX_OFFSET_ZX0 : inputSize - 1 < 1 ? 1 : inputSize - 1;
 			int dots = 0;
+			Block[] lastLiteral = new Block[maxOffset + 1];
+			Block[] lastMatch = new Block[maxOffset + 1];
+			Block[] tabOptimal = new Block[inputSize + 1];
+			int[] matchLength = new int[maxOffset + 1];
+			int[] bestLength = new int[inputSize + 2];
 
-			Block[] last_literal = new Block[max_offset + 1];
-			Block[] last_match = new Block[max_offset + 1];
-			Block[] tabOptimal = new Block[input_size + 1];
-			int[] match_length = new int[max_offset + 1];
-			int[] best_length = new int[input_size + 2];
-			best_length[2] = 2;
-			Assign(ref last_match[1], Allocate(-1, -1, 1, 0, null));
-			for (int index = 0; index < input_size; index++) {
-				int best_length_size = 2;
-				max_offset = index > MAX_OFFSET_ZX0 ? MAX_OFFSET_ZX0 : index < 1 ? 1 : index;
-				for (int offset = 1; offset <= max_offset; offset++) {
-					if (index != 0 && index >= offset && input_data[index] == input_data[index - offset]) {
-						if (last_literal[offset] != null) {
-							length = index - last_literal[offset].index;
-							bits = last_literal[offset].bits + 1 + Elias_gamma_bits(length);
-							Assign(ref last_match[offset], Allocate(bits, index, offset, length, last_literal[offset]));
-							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-								Assign(ref tabOptimal[index], last_match[offset]);
+			bestLength[2] = 2;
+			Block chain = Allocate(-1, 0 - 1, 1, null);
+			chain.references++;
+			if (lastMatch[1] != null && --lastMatch[1].references == 0) {
+				lastMatch[1].ghostChain = ghostRoot;
+				ghostRoot = lastMatch[1];
+			}
+			lastMatch[1] = chain;
+			for (int index = 0; index < inputSize; index++) {
+				int bestLengthSize = 2;
+				maxOffset = index > MAX_OFFSET_ZX0 ? MAX_OFFSET_ZX0 : index < 1 ? 1 : index;
+				for (int offset = 1; offset <= maxOffset; offset++) {
+					if (index != 0 && index >= offset && inputData[index] == inputData[index - offset]) {
+						if (lastLiteral[offset] != null) {
+							length = index - lastLiteral[offset].index;
+							bits = lastLiteral[offset].bits + 1 + EliasGammaBits(length);
+							chain = Allocate(bits, index, offset, lastLiteral[offset]);
+							chain.references++;
+							if (lastMatch[offset] != null && --lastMatch[offset].references == 0) {
+								lastMatch[offset].ghostChain = ghostRoot;
+								ghostRoot = lastMatch[offset];
+							}
+							lastMatch[offset] = chain;
+							if (tabOptimal[index] == null || tabOptimal[index].bits > bits) {
+								chain = lastMatch[offset];
+								chain.references++;
+								if (tabOptimal[index] != null && --tabOptimal[index].references == 0) {
+									tabOptimal[index].ghostChain = ghostRoot;
+									ghostRoot = tabOptimal[index];
+								}
+								tabOptimal[index] = chain;
+							}
 						}
-						if (++match_length[offset] > 1) {
-							if (best_length_size < match_length[offset]) {
-								bits = tabOptimal[index - best_length[best_length_size]].bits + Elias_gamma_bits(best_length[best_length_size] - 1);
+						if (++matchLength[offset] > 1) {
+							if (bestLengthSize < matchLength[offset]) {
+								bits = tabOptimal[index - bestLength[bestLengthSize]].bits + EliasGammaBits(bestLength[bestLengthSize] - 1);
 								do {
-									best_length_size++;
-									int bits2 = tabOptimal[index - best_length_size].bits + Elias_gamma_bits(best_length_size - 1);
+									bestLengthSize++;
+									int bits2 = tabOptimal[index - bestLengthSize].bits + EliasGammaBits(bestLengthSize - 1);
 									if (bits2 <= bits) {
-										best_length[best_length_size] = best_length_size;
+										bestLength[bestLengthSize] = bestLengthSize;
 										bits = bits2;
 									}
 									else
-										best_length[best_length_size] = best_length[best_length_size - 1];
-								}
-								while (best_length_size < match_length[offset]);
+										bestLength[bestLengthSize] = bestLength[bestLengthSize - 1];
+
+								} while (bestLengthSize < matchLength[offset]);
 							}
-							length = best_length[match_length[offset]];
-							bits = tabOptimal[index - length].bits + 8 + Elias_gamma_bits((offset - 1) / 128 + 1) + Elias_gamma_bits(length - 1);
-							if (last_match[offset] == null || last_match[offset].index != index || last_match[offset].bits > bits) {
-								Assign(ref last_match[offset], Allocate(bits, index, offset, length, tabOptimal[index - length]));
-								if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-									Assign(ref tabOptimal[index], last_match[offset]);
+							length = bestLength[matchLength[offset]];
+							bits = tabOptimal[index - length].bits + 8 + EliasGammaBits((offset - 1) / 128 + 1) + EliasGammaBits(length - 1);
+							if (lastMatch[offset] == null || lastMatch[offset].index != index || lastMatch[offset].bits > bits) {
+								chain = Allocate(bits, index, offset, tabOptimal[index - length]);
+								chain.references++;
+								if (lastMatch[offset] != null && --lastMatch[offset].references == 0) {
+									lastMatch[offset].ghostChain = ghostRoot;
+									ghostRoot = lastMatch[offset];
+								}
+								lastMatch[offset] = chain;
+								if (tabOptimal[index] == null || tabOptimal[index].bits > bits) {
+									chain = lastMatch[offset];
+									chain.references++;
+									if (tabOptimal[index] != null && --tabOptimal[index].references == 0) {
+										tabOptimal[index].ghostChain = ghostRoot;
+										ghostRoot = tabOptimal[index];
+									}
+									tabOptimal[index] = chain;
+								}
 							}
 						}
 					}
 					else {
-						match_length[offset] = 0;
-						if (last_match[offset] != null) {
-							length = index - last_match[offset].index;
-							bits = last_match[offset].bits + 1 + Elias_gamma_bits(length) + length * 8;
-							Assign(ref last_literal[offset], Allocate(bits, index, 0, length, last_match[offset]));
-							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-								Assign(ref tabOptimal[index], last_literal[offset]);
+						matchLength[offset] = 0;
+						if (lastMatch[offset] != null) {
+							length = index - lastMatch[offset].index;
+							bits = lastMatch[offset].bits + 1 + EliasGammaBits(length) + (length << 3);
+							chain = Allocate(bits, index, 0, lastMatch[offset]);
+							chain.references++;
+							if (lastLiteral[offset] != null && --lastLiteral[offset].references == 0) {
+								lastLiteral[offset].ghostChain = ghostRoot;
+								ghostRoot = lastLiteral[offset];
+							}
+							lastLiteral[offset] = chain;
+							if (tabOptimal[index] == null || tabOptimal[index].bits > bits) {
+								chain = lastLiteral[offset];
+								chain.references++;
+								if (tabOptimal[index] != null && --tabOptimal[index].references == 0) {
+									tabOptimal[index].ghostChain = ghostRoot;
+									ghostRoot = tabOptimal[index];
+								}
+								tabOptimal[index] = chain;
+							}
 						}
 					}
 				}
-				if (index * MAX_SCALE / input_size > dots) {
+				if (index * MAX_SCALE / inputSize > dots) {
 					progressBar1.Value = 100 * ++dots / MAX_SCALE;
 					Application.DoEvents();
 				}
 			}
-			Block prev, next = null, optimal = tabOptimal[input_size - 1];
-			output_size = (optimal.bits + 18 + 7) / 8;
+			Block prev = null, next, optimal = tabOptimal[inputSize - 1];
+			int outputSize = (optimal.bits + 25) / 8;
+			while (optimal != null) {
+				next = optimal.chain;
+				optimal.chain = prev;
+				prev = optimal;
+				optimal = next;
+			}
+			outputIndex = 0;
+			bitMask = 0;
+			int lastOffset = 1;
+			int inputIndex = 0;
+			backTrack = true;
+			for (optimal = prev.chain; optimal != null; prev = optimal, optimal = optimal.chain) {
+				length = optimal.index - prev.index;
+
+				if (optimal.offset == 0) {
+					WriteBit(0, outputData);
+					WriteInterlacedEliasGammaZX0(length, outputData, false);
+					for (int i = 0; i < length; i++)
+						outputData[outputIndex++] = inputData[inputIndex++];
+				}
+				else if (optimal.offset == lastOffset) {
+					WriteBit(0, outputData);
+					WriteInterlacedEliasGammaZX0(length, outputData, false);
+					inputIndex += length;
+				}
+				else {
+					WriteBit(1, outputData);
+					WriteInterlacedEliasGammaZX0((optimal.offset - 1) / 128 + 1, outputData, v2);
+					outputData[outputIndex++] = (byte)((127 - (optimal.offset - 1) % 128) << 1);
+					backTrack = true;
+					WriteInterlacedEliasGammaZX0(length - 1, outputData, false);
+					inputIndex += length;
+					lastOffset = optimal.offset;
+				}
+			}
+			WriteBit(1, outputData);
+			WriteInterlacedEliasGammaZX0(256, outputData, v2);
+			Hide();
+			return outputSize;
+		}
+
+		private void WriteInterlacedEliasGammaZX1(int value, byte[] outputData) {
+			int i;
+			for (i = 2; i <= value; i <<= 1)
+				;
+			i >>= 1;
+			while ((i >>= 1) > 0) {
+				WriteBit(1, outputData);
+				WriteBit(value & i, outputData);
+			}
+			WriteBit(0, outputData);
+		}
+
+		private int PackZX1(byte[] inputData, int inputSize, byte[] outputData) {
+			Show();
+			int bits, length;
+			int maxOffset = inputSize - 1 > MAX_OFFSET_ZX1 ? MAX_OFFSET_ZX1 : inputSize - 1 < 1 ? 1 : inputSize - 1;
+			int dots = 0;
+
+			Block[] lastLiteral = new Block[maxOffset + 1];
+			Block[] lastMatch = new Block[maxOffset + 1];
+			Block[] tabOptimal = new Block[inputSize + 1];
+			int[] matchLength = new int[maxOffset + 1];
+			int[] bestLength = new int[inputSize + 2];
+			bestLength[2] = 2;
+			Assign(ref lastMatch[1], Allocate(-1, -1, 1, null));
+			for (int index = 0; index < inputSize; index++) {
+				int bestLengthSize = 2;
+				maxOffset = index > MAX_OFFSET_ZX1 ? MAX_OFFSET_ZX1 : index < 1 ? 1 : index;
+				for (int offset = 1; offset <= maxOffset; offset++) {
+					if (index != 0 && index >= offset && inputData[index] == inputData[index - offset]) {
+						if (lastLiteral[offset] != null) {
+							length = index - lastLiteral[offset].index;
+							bits = lastLiteral[offset].bits + 1 + EliasGammaBits(length);
+							Assign(ref lastMatch[offset], Allocate(bits, index, offset, lastLiteral[offset]));
+							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
+								Assign(ref tabOptimal[index], lastMatch[offset]);
+						}
+						if (++matchLength[offset] > 1) {
+							if (bestLengthSize < matchLength[offset]) {
+								bits = tabOptimal[index - bestLength[bestLengthSize]].bits + EliasGammaBits(bestLength[bestLengthSize] - 1);
+								do {
+									bestLengthSize++;
+									int bits2 = tabOptimal[index - bestLengthSize].bits + EliasGammaBits(bestLengthSize - 1);
+									if (bits2 <= bits) {
+										bestLength[bestLengthSize] = bestLengthSize;
+										bits = bits2;
+									}
+									else
+										bestLength[bestLengthSize] = bestLength[bestLengthSize - 1];
+								}
+								while (bestLengthSize < matchLength[offset]);
+							}
+							length = bestLength[matchLength[offset]];
+							bits = tabOptimal[index - length].bits + 1 + (offset > 128 ? 16 : 8) + EliasGammaBits(length - 1);
+							if (lastMatch[offset] == null || lastMatch[offset].index != index || lastMatch[offset].bits > bits) {
+								Assign(ref lastMatch[offset], Allocate(bits, index, offset, tabOptimal[index - length]));
+								if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
+									Assign(ref tabOptimal[index], lastMatch[offset]);
+							}
+						}
+					}
+					else {
+						matchLength[offset] = 0;
+						if (lastMatch[offset] != null) {
+							length = index - lastMatch[offset].index;
+							bits = lastMatch[offset].bits + 1 + EliasGammaBits(length) + (length << 3);
+							Assign(ref lastLiteral[offset], Allocate(bits, index, 0, lastMatch[offset]));
+							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
+								Assign(ref tabOptimal[index], lastLiteral[offset]);
+						}
+					}
+				}
+				if (index * MAX_SCALE / inputSize > dots) {
+					progressBar1.Value = 100 * ++dots / MAX_SCALE;
+					Application.DoEvents();
+				}
+			}
+			Block prev, next = null, optimal = tabOptimal[inputSize - 1];
+			int outputSize = (optimal.bits + 17 + 7) / 8;
 			while (optimal != null) {
 				prev = optimal.chain;
 				optimal.chain = next;
 				next = optimal;
 				optimal = prev;
 			}
-			output_index = 0;
-			bit_mask = 0;
-			int last_offset = 1;
-			int input_index = 0;
+			outputIndex = 0;
+			bitMask = 0;
+			int lastOffset = 1;
+			int inputIndex = 0;
 			bool first = true;
 			for (optimal = next.chain; optimal != null; optimal = optimal.chain) {
 				if (optimal.offset == 0) {
 					if (first)
 						first = false;
 					else
-						Write_bit(0, output_data);
+						WriteBit(0, outputData);
 
-					Write_interlaced_elias_gammaZX0(optimal.length, output_data);
+					WriteInterlacedEliasGammaZX1(optimal.length, outputData);
 					for (int i = 0; i < optimal.length; i++)
-						output_data[output_index++] = input_data[input_index++];
+						outputData[outputIndex++] = inputData[inputIndex++];
 				}
 				else
-					if (optimal.offset == last_offset) {
-						Write_bit(0, output_data);
-						Write_interlaced_elias_gammaZX0(optimal.length, output_data);
-						input_index += optimal.length;
-					}
-					else {
-						Write_bit(1, output_data);
-						Write_interlaced_elias_gammaZX0((optimal.offset - 1) / 128 + 1, output_data);
-						output_data[output_index++] = (byte)((255 - ((optimal.offset - 1) % 128)) << 1);
-						backtrack = true;
-						Write_interlaced_elias_gammaZX0(optimal.length - 1, output_data);
-						input_index += optimal.length;
-						last_offset = optimal.offset;
-					}
-			}
-			Write_bit(1, output_data);
-			Write_interlaced_elias_gammaZX0(256, output_data);
-			Hide();
-			return output_size;
-		}
-
-		private int PackZX1(byte[] input_data, int input_size, byte[] output_data, int output_size) {
-			Show();
-			int bits, length;
-			int max_offset = input_size - 1 > MAX_OFFSET_ZX1 ? MAX_OFFSET_ZX1 : input_size - 1 < 1 ? 1 : input_size - 1;
-			int dots = 0;
-
-			Block[] last_literal = new Block[max_offset + 1];
-			Block[] last_match = new Block[max_offset + 1];
-			Block[] tabOptimal = new Block[input_size + 1];
-			int[] match_length = new int[max_offset + 1];
-			int[] best_length = new int[input_size + 2];
-			best_length[2] = 2;
-			Assign(ref last_match[1], Allocate(-1, -1, 1, 0, null));
-			for (int index = 0; index < input_size; index++) {
-				int best_length_size = 2;
-				max_offset = index > MAX_OFFSET_ZX1 ? MAX_OFFSET_ZX1 : index < 1 ? 1 : index;
-				for (int offset = 1; offset <= max_offset; offset++) {
-					if (index != 0 && index >= offset && input_data[index] == input_data[index - offset]) {
-						if (last_literal[offset] != null) {
-							length = index - last_literal[offset].index;
-							bits = last_literal[offset].bits + 1 + Elias_gamma_bits(length);
-							Assign(ref last_match[offset], Allocate(bits, index, offset, length, last_literal[offset]));
-							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-								Assign(ref tabOptimal[index], last_match[offset]);
-						}
-						if (++match_length[offset] > 1) {
-							if (best_length_size < match_length[offset]) {
-								bits = tabOptimal[index - best_length[best_length_size]].bits + Elias_gamma_bits(best_length[best_length_size] - 1);
-								do {
-									best_length_size++;
-									int bits2 = tabOptimal[index - best_length_size].bits + Elias_gamma_bits(best_length_size - 1);
-									if (bits2 <= bits) {
-										best_length[best_length_size] = best_length_size;
-										bits = bits2;
-									}
-									else
-										best_length[best_length_size] = best_length[best_length_size - 1];
-								}
-								while (best_length_size < match_length[offset]);
-							}
-							length = best_length[match_length[offset]];
-							bits = tabOptimal[index - length].bits + 1 + (offset > 128 ? 16 : 8) + Elias_gamma_bits(length - 1);
-							if (last_match[offset] == null || last_match[offset].index != index || last_match[offset].bits > bits) {
-								Assign(ref last_match[offset], Allocate(bits, index, offset, length, tabOptimal[index - length]));
-								if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-									Assign(ref tabOptimal[index], last_match[offset]);
-							}
-						}
-					}
-					else {
-						match_length[offset] = 0;
-						if (last_match[offset] != null) {
-							length = index - last_match[offset].index;
-							bits = last_match[offset].bits + 1 + Elias_gamma_bits(length) + length * 8;
-							Assign(ref last_literal[offset], Allocate(bits, index, 0, length, last_match[offset]));
-							if (tabOptimal[index] == null || tabOptimal[index].bits > bits)
-								Assign(ref tabOptimal[index], last_literal[offset]);
-						}
-					}
+					if (optimal.offset == lastOffset) {
+					WriteBit(0, outputData);
+					WriteInterlacedEliasGammaZX1(optimal.length, outputData);
+					inputIndex += optimal.length;
 				}
-				if (index * MAX_SCALE / input_size > dots) {
-					progressBar1.Value = 100 * ++dots / MAX_SCALE;
-					Application.DoEvents();
-				}
-			}
-			Block prev, next = null, optimal = tabOptimal[input_size - 1];
-			output_size = (optimal.bits + 17 + 7) / 8;
-			while (optimal != null) {
-				prev = optimal.chain;
-				optimal.chain = next;
-				next = optimal;
-				optimal = prev;
-			}
-			output_index = 0;
-			bit_mask = 0;
-			int last_offset = 1;
-			int input_index = 0;
-			bool first = true;
-			for (optimal = next.chain; optimal != null; optimal = optimal.chain) {
-				if (optimal.offset == 0) {
-					if (first)
-						first = false;
+				else {
+					WriteBit(1, outputData);
+					if (optimal.offset > 128) {
+						outputData[outputIndex++] = (byte)(255 - ((optimal.offset - 1) & 254));
+						outputData[outputIndex++] = (byte)(252 - (optimal.offset - 1) / 256 * 2 + optimal.offset % 2);
+					}
 					else
-						Write_bit(0, output_data);
+						outputData[outputIndex++] = (byte)(256 - optimal.offset * 2);
 
-					Write_interlaced_elias_gammaZX1(optimal.length, output_data);
-					for (int i = 0; i < optimal.length; i++)
-						output_data[output_index++] = input_data[input_index++];
+					WriteInterlacedEliasGammaZX1(optimal.length - 1, outputData);
+					inputIndex += optimal.length;
+					lastOffset = optimal.offset;
 				}
-				else
-					if (optimal.offset == last_offset) {
-						Write_bit(0, output_data);
-						Write_interlaced_elias_gammaZX1(optimal.length, output_data);
-						input_index += optimal.length;
-					}
-					else {
-						Write_bit(1, output_data);
-						if (optimal.offset > 128) {
-							output_data[output_index++] = (byte)(255 - ((optimal.offset - 1) & 254));
-							output_data[output_index++] = (byte)(252 - (optimal.offset - 1) / 256 * 2 + optimal.offset % 2);
-						}
-						else
-							output_data[output_index++] = (byte)(256 - optimal.offset * 2);
-
-						Write_interlaced_elias_gammaZX1(optimal.length - 1, output_data);
-						input_index += optimal.length;
-						last_offset = optimal.offset;
-					}
 			}
-			Write_bit(1, output_data);
-			output_data[output_index++] = 255;
-			output_data[output_index++] = 255;
+			WriteBit(1, outputData);
+			outputData[outputIndex++] = 255;
+			outputData[outputIndex++] = 255;
 			Hide();
-			return output_size;
+			return outputSize;
 		}
 
 		public int Depack(byte[] bufIn, int startIn, byte[] bufOut, Main.PackMethode pkMethode) {
@@ -584,11 +610,15 @@ namespace PackCPC {
 					break;
 
 				case Main.PackMethode.ZX0:
-					ret = PackZX0(bufIn, lengthIn, bufOut, lengthOut);
+					ret = PackZX0(bufIn, lengthIn, bufOut, false);
+					break;
+
+				case Main.PackMethode.ZX0_V2:
+					ret = PackZX0(bufIn, lengthIn, bufOut, true);
 					break;
 
 				case Main.PackMethode.ZX1:
-					ret = PackZX1(bufIn, lengthIn, bufOut, lengthOut);
+					ret = PackZX1(bufIn, lengthIn, bufOut);
 					break;
 			}
 			return ret;
@@ -596,7 +626,7 @@ namespace PackCPC {
 	}
 
 	public class Block {
-		public Block chain, ghost_chain;
-		public int bits, index, offset, length, references;
+		public Block chain, ghostChain;
+		public int bits, index, offset, references, length;
 	}
 }

@@ -31,6 +31,10 @@
 			this.chkAsm = new System.Windows.Forms.CheckBox();
 			this.chkNoDepack = new System.Windows.Forms.CheckBox();
 			this.chkMulti = new System.Windows.Forms.CheckBox();
+			this.chkCutFiles = new System.Windows.Forms.CheckBox();
+			this.txbBytesSize = new System.Windows.Forms.TextBox();
+			this.label2 = new System.Windows.Forms.Label();
+			this.chkAsmWord = new System.Windows.Forms.CheckBox();
 			this.SuspendLayout();
 			// 
 			// bpPack
@@ -51,6 +55,7 @@
             "-- None --",
             "Standard",
             "ZX0",
+            "ZX0 V2",
             "ZX1"});
 			this.comboPackMethode.Location = new System.Drawing.Point(126, 6);
 			this.comboPackMethode.Name = "comboPackMethode";
@@ -69,7 +74,7 @@
 			// listBox1
 			// 
 			this.listBox1.FormattingEnabled = true;
-			this.listBox1.Location = new System.Drawing.Point(4, 85);
+			this.listBox1.Location = new System.Drawing.Point(4, 108);
 			this.listBox1.Name = "listBox1";
 			this.listBox1.Size = new System.Drawing.Size(388, 134);
 			this.listBox1.TabIndex = 69;
@@ -117,13 +122,58 @@
 			this.chkMulti.UseVisualStyleBackColor = true;
 			this.chkMulti.CheckedChanged += new System.EventHandler(this.ChkAsm_CheckedChanged);
 			// 
+			// chkCutFiles
+			// 
+			this.chkCutFiles.AutoSize = true;
+			this.chkCutFiles.Location = new System.Drawing.Point(12, 85);
+			this.chkCutFiles.Name = "chkCutFiles";
+			this.chkCutFiles.Size = new System.Drawing.Size(110, 17);
+			this.chkCutFiles.TabIndex = 73;
+			this.chkCutFiles.Text = "Cut file in x files of";
+			this.chkCutFiles.UseVisualStyleBackColor = true;
+			this.chkCutFiles.CheckedChanged += new System.EventHandler(this.ChkCutFiles_CheckedChanged);
+			// 
+			// txbBytesSize
+			// 
+			this.txbBytesSize.Enabled = false;
+			this.txbBytesSize.Location = new System.Drawing.Point(120, 82);
+			this.txbBytesSize.MaxLength = 5;
+			this.txbBytesSize.Name = "txbBytesSize";
+			this.txbBytesSize.Size = new System.Drawing.Size(41, 20);
+			this.txbBytesSize.TabIndex = 74;
+			this.txbBytesSize.Text = "#1000";
+			// 
+			// label2
+			// 
+			this.label2.AutoSize = true;
+			this.label2.Location = new System.Drawing.Point(164, 86);
+			this.label2.Name = "label2";
+			this.label2.Size = new System.Drawing.Size(32, 13);
+			this.label2.TabIndex = 75;
+			this.label2.Text = "bytes";
+			// 
+			// chkAsmWord
+			// 
+			this.chkAsmWord.AutoSize = true;
+			this.chkAsmWord.Location = new System.Drawing.Point(224, 75);
+			this.chkAsmWord.Name = "chkAsmWord";
+			this.chkAsmWord.Size = new System.Drawing.Size(144, 17);
+			this.chkAsmWord.TabIndex = 71;
+			this.chkAsmWord.Text = "Save as asm file (DEFW)";
+			this.chkAsmWord.UseVisualStyleBackColor = true;
+			this.chkAsmWord.CheckedChanged += new System.EventHandler(this.ChkAsmWord_CheckedChanged);
+			// 
 			// Main
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(397, 223);
+			this.ClientSize = new System.Drawing.Size(397, 244);
+			this.Controls.Add(this.label2);
+			this.Controls.Add(this.txbBytesSize);
+			this.Controls.Add(this.chkCutFiles);
 			this.Controls.Add(this.chkNoDepack);
 			this.Controls.Add(this.chkMulti);
+			this.Controls.Add(this.chkAsmWord);
 			this.Controls.Add(this.chkAsm);
 			this.Controls.Add(this.chkNoAmsdos);
 			this.Controls.Add(this.listBox1);
@@ -150,6 +200,10 @@
 		private System.Windows.Forms.CheckBox chkAsm;
 		private System.Windows.Forms.CheckBox chkNoDepack;
 		private System.Windows.Forms.CheckBox chkMulti;
+		private System.Windows.Forms.CheckBox chkCutFiles;
+		private System.Windows.Forms.TextBox txbBytesSize;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.CheckBox chkAsmWord;
 	}
 }
 

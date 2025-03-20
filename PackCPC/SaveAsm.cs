@@ -3,28 +3,23 @@ using System.IO;
 
 namespace PackCPC {
 	public class SaveAsm {
-		static public void GenereDatas(StreamWriter sw, byte[] tabByte, int length, int nbOctetsLigne, int ligneSepa = 0, string labelSepa = null) {
-			string line = "\tDB\t";
-			int nbOctets = 0, nbLigne = 0, indiceLabel = 0;
-			if (labelSepa != null) {
-				sw.WriteLine(labelSepa + indiceLabel.ToString("00"));
-				indiceLabel++;
-			}
+		static public void GenereDatas(StreamWriter sw, byte[] tabByte, int length, int nbOctetsLigne, bool isWord) {
+			string line = isWord ? "\tDW\t" : "\tDB\t";
+			int nbOctets = 0;
+
 			for (int i = 0; i < length; i++) {
+				if (isWord) {
+					int adr = tabByte[i] + (tabByte[i + 1] << 8);
+					line += "#" + adr.ToString("X4") + ",";
+					nbOctets++;
+					i++;
+			}
+				else
 				line += "#" + tabByte[i].ToString("X2") + ",";
 				if (++nbOctets >= Math.Min(nbOctetsLigne, 64)) {
 					sw.WriteLine(line.Substring(0, line.Length - 1));
-					line = "\tDB\t";
+					line = isWord ? "\tDW\t" : "\tDB\t";
 					nbOctets = 0;
-					if (i < length - 1 && ++nbLigne >= ligneSepa && ligneSepa > 0) {
-						nbLigne = 0;
-						if (labelSepa != null) {
-							sw.WriteLine(labelSepa + indiceLabel.ToString("00"));
-							indiceLabel++;
-						}
-						else
-							line += "\r\n";
-					}
 				}
 			}
 			if (nbOctets > 0)
